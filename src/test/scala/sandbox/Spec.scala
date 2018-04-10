@@ -1,7 +1,6 @@
 package sandbox
 
 import org.scalatest._
-import scala.meta._
 import scala.util._
 import scala.collection.concurrent.TrieMap
 import java.nio.ByteBuffer
