@@ -6,10 +6,12 @@ import scala.collection.Seq
 import Assortment._
 
 final class Assortment[K, V] private[data](
-    val insertOrder: List[Element[K, V]]) {
+    _insertOrder: List[Element[K, V]]) {
+
+  lazy val insertOrder = _insertOrder.reverse
 
   lazy val (set, map, seq) =
-    ((Set[K](), Map[K, V](), Seq[V]()) /: insertOrder)((acc, elem) => {
+    ((Set[K](), Map[K, V](), Seq[V]()) /: _insertOrder)((acc, elem) => {
       acc match {
         case (set, map, seq) =>
           elem match {
@@ -30,8 +32,6 @@ final class Assortment[K, V] private[data](
       case elem :: tail => closeZipper(tail, elem :: right)
       case Nil => right
     }
-
-  def iterator = insertOrder.reverse.iterator
 
   def findAndReplace(
       left: List[Element[K, V]],
@@ -66,7 +66,7 @@ final class Assortment[K, V] private[data](
     val entryF: (K, List[Element[K, V]],
           List[Element[K, V]]) =>
             Option[List[Element[K, V]]] =
-      (key_, left, tail) => if (key == key_) Some(insertOrder) else None
+      (key_, left, tail) => if (key == key_) Some(_insertOrder) else None
 
     val mappingF: (K, V, List[Element[K, V]],
           List[Element[K, V]]) =>
@@ -77,8 +77,8 @@ final class Assortment[K, V] private[data](
       else None
 
     new Assortment(
-        findAndReplace(Nil, insertOrder, entryF, mappingF) match {
-      case None => Entry[K, V](key) :: insertOrder
+        findAndReplace(Nil, _insertOrder, entryF, mappingF) match {
+      case None => Entry[K, V](key) :: _insertOrder
       case Some(list) => list
     })
   }
@@ -99,19 +99,19 @@ final class Assortment[K, V] private[data](
             Option[List[Element[K, V]]] =
       (key_, value_, left, tail) =>
         if (key == key_)
-          if (value_ == value) Some(insertOrder)
+          if (value_ == value) Some(_insertOrder)
           else Some(closeZipper(
               left, Mapping[K, V](key, value) :: tail))
         else None
 
-    new Assortment(findAndReplace(Nil, insertOrder, entryF, mappingF)
+    new Assortment(findAndReplace(Nil, _insertOrder, entryF, mappingF)
         match {
-          case None => Mapping[K, V](key, value) :: insertOrder
+          case None => Mapping[K, V](key, value) :: _insertOrder
           case Some(list) => list
         })
   }
 
-  def :+(value: V) = new Assortment(Item[K, V](value) :: insertOrder)
+  def :+(value: V) = new Assortment(Item[K, V](value) :: _insertOrder)
 
   lazy val string = s"($set, $map, $seq)"
 
