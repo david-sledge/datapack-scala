@@ -15,28 +15,28 @@ class ReaderSpec extends FlatSpec with Matchers {
   }
 
   it should "read a Nil" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](nilByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](NilByte)),
         (_ shouldBe TNil))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "throw an exception when a format byte is read in an invalid state" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](collectionEndByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](CollectionEndByte)),
         (_ shouldBe TNil))
     an [ReadStateException] should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "read a Boolean false" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](falseByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](FalseByte)),
         (_ shouldBe TFalse))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "read a Boolean true" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](trueByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](TrueByte)),
         (_ shouldBe TTrue))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 1
@@ -44,97 +44,128 @@ class ReaderSpec extends FlatSpec with Matchers {
 
   it should "read a masked non-negative integer" in {
     val reader = new Reader(new ByteArrayInputStream(Array[Byte](0x0f.toByte)),
-        (_ shouldBe TInt(15)))
+        (_ shouldBe toTInt(15)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "read a masked non-positive integer" in {
     val reader = new Reader(new ByteArrayInputStream(Array[Byte](0xff.toByte)),
-        (_ shouldBe TInt(-1)))
+        (_ shouldBe toTInt(-1)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "read a one-byte signed integer" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](int8Byte, 0xff.toByte)),
-        (_ shouldBe TInt(0xffffffff)))
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Int8Byte, 0xff.toByte)),
+        (_ shouldBe toTInt(0xffffffff)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 2
   }
 
   it should "read a two-byte signed integer" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](int16Byte, 0xff.toByte, 0xff.toByte)),
-        (_ shouldBe TInt(0xffffffff)))
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Int16Byte, 0xff.toByte, 0xff.toByte)),
+        (_ shouldBe toTInt(0xffffffff)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 3
   }
 
   it should "read a four-byte signed integer" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](int32Byte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte)),
-        (_ shouldBe TInt(0xffffffff)))
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Int32Byte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte)),
+        (_ shouldBe toTInt(0xffffffff)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 5
   }
 
   it should "read an eight-byte signed integer" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](int64Byte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte)),
-        (_ shouldBe TInt(0xffffffffffffffffl)))
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Int64Byte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte)),
+        (_ shouldBe toTInt(0xffffffffffffffffl)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 9
   }
 
+  it should "read a one-byte unsigned integer" in {
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Uint8Byte, 0xff.toByte)),
+        (_ shouldBe toTInt(0x000000ff)))
+    noException should be thrownBy reader.readValue
+    reader.position shouldBe 2
+  }
+
+  it should "read a two-byte unsigned integer" in {
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Uint16Byte, 0xff.toByte, 0xff.toByte)),
+        (_ shouldBe toTInt(0x0000ffff)))
+    noException should be thrownBy reader.readValue
+    reader.position shouldBe 3
+  }
+
+  it should "read a four-byte unsigned integer" in {
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Uint32Byte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte)),
+        (_ shouldBe toTInt(0x00000000ffffffffL)))
+    noException should be thrownBy reader.readValue
+    reader.position shouldBe 5
+  }
+
+  it should "read an eight-byte unsigned integer" in {
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Uint64Byte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte)),
+        (_ shouldBe TInt(new java.math.BigInteger(1,
+            Array[Byte](-1, -1, -1, -1, -1, -1, -1, -1)
+            ))))
+    noException should be thrownBy reader.readValue
+    reader.position shouldBe 9
+  }
+  /*
+ *  */
   it should "read a four-byte floating point decimal" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](float32Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Float32Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)),
         (_ shouldBe TFloat(-2f)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 5
   }
 
   it should "read an eight-byte floating point decimal" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](float64Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Float64Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)),
         (_ shouldBe TDouble(-2)))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 9
   }
 
   it should "read brief binary data" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte]((fixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte]((FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
         (_ shouldBe TBin(List[Byte](0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte))))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 6
   }
 
   it should "read (seemingly) not-so-brief binary data" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](bin8Byte, 5.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](Bin8Byte, 5.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
         (_ shouldBe TBin(List[Byte](0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte))))
     noException should be thrownBy reader.readValue
     reader.position shouldBe 7
   }
 
   it should "not allow namespaces outside of class names and property names" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte]((fixnsMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte]((FixnsMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
         (_ shouldBe TBin(List[Byte](0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte))))
     an [ReadStateException] should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "not allow class names outside of the beginnings of objects and arrays" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](classNameByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](ClassNameByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
         (_ shouldBe TBin(List[Byte](0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte))))
     an [ReadStateException] should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "not allow no key/value bytes outside of assortments and objects" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](noKeyValueByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](NoKeyValueByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)),
         (_ shouldBe TBin(List[Byte](0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte))))
     an [ReadStateException] should be thrownBy reader.readValue
     reader.position shouldBe 1
   }
 
   it should "allow an empty assortment" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](assortmentByte, collectionEndByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](AssortmentByte, CollectionEndByte)),
         (_) => ())
     noException should be thrownBy reader.readValue
     noException should be thrownBy reader.readValue
@@ -143,14 +174,14 @@ class ReaderSpec extends FlatSpec with Matchers {
 
   it should "allow a non-empty assortment" in {
     val reader = new Reader(new ByteArrayInputStream(Array[Byte](
-        assortmentByte,
+        AssortmentByte,
         // key
         0x0f.toByte,
         // value
         0xff.toByte,
         // key without value
         0xff.toByte,
-        collectionEndByte)),
+        CollectionEndByte)),
       (_) => ())
     noException should be thrownBy reader.readValue
     noException should be thrownBy reader.readValue
@@ -161,7 +192,7 @@ class ReaderSpec extends FlatSpec with Matchers {
   } 
 
   it should "allow an empty set of objects (collection of qualified name/value pairs)" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](objectByte, collectionEndByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](ObjectByte, CollectionEndByte)),
         (_) => ())
     noException should be thrownBy reader.readValue
     noException should be thrownBy reader.readValue
@@ -169,7 +200,7 @@ class ReaderSpec extends FlatSpec with Matchers {
   }
 
   it should "allow a non-empty set of objects" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](objectByte, (fixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, (fixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, collectionEndByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](ObjectByte, (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, CollectionEndByte)),
         (_) => ())
     noException should be thrownBy reader.readValue
     noException should be thrownBy reader.readValue
@@ -179,7 +210,7 @@ class ReaderSpec extends FlatSpec with Matchers {
   }
 
   it should "allow a classed empty set of objects" in {
-    val reader = new Reader(new ByteArrayInputStream(Array[Byte](objectByte, classNameByte, (fixbinMask | 0x0).toByte, collectionEndByte)),
+    val reader = new Reader(new ByteArrayInputStream(Array[Byte](ObjectByte, ClassNameByte, (FixbinMask | 0x0).toByte, CollectionEndByte)),
         (_) => ())
     noException should be thrownBy reader.readValue
     noException should be thrownBy reader.readValue

@@ -77,7 +77,7 @@ object ObjectWriter {
       case DNil => writeNil
       case DFalse => writeFalse
       case DTrue => writeTrue
-      case DInt(int) => writeInt(int)
+      case DInt(int) => writeBigInt(int)
       case DFloat(float) => writeFloat(float)
       case DDouble(float) => writeDouble(float)
       case DBin(list) => writeBin(list.toArray)

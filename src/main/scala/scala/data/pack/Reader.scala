@@ -5,6 +5,7 @@ import java.io.EOFException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import Reader._
+import java.math.BigInteger
 
 final class Reader(is: InputStream, handlePackType: PackType => Any) {
 
@@ -358,7 +359,7 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
       // identify format and verify that the byte is valid in the current state
       idFormat(byte) match {
         case Fixint(int) =>
-          nonStringValueValitioner(byte)(() => handlePackType(TInt(int)))
+          nonStringValueValitioner(byte)(() => handlePackType(toTInt(int)))
         case FNil =>
           nonStringValueValitioner(byte)(() => handlePackType(TNil))
         case FColEnd =>
@@ -368,22 +369,42 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
         case FTrue =>
           nonStringValueValitioner(byte)(() => handlePackType(TTrue))
         case FInt8 => nonStringValueValitioner(byte)(
-            () => handlePackType(TInt(read1ByteUInt.toByte)))
+            () => handlePackType(toTInt(read1ByteUInt.toByte)))
         case FInt16 =>
           nonStringValueValitioner(byte)(() => {
             readBytes_(2)
-            handlePackType(TInt(ByteBuffer.wrap(buffer).getShort))
+            handlePackType(toTInt(ByteBuffer.wrap(buffer).getShort))
           })
         case FInt32 =>
           nonStringValueValitioner(byte)(() => {
             readBytes_(4)
-            handlePackType(TInt(ByteBuffer.wrap(buffer).getInt))
+            handlePackType(toTInt(ByteBuffer.wrap(buffer).getInt))
           })
         case FInt64 =>
           nonStringValueValitioner(byte)(() => {
             readBytes_(8)
-            handlePackType(TInt(ByteBuffer.wrap(buffer).getLong))
+            handlePackType(toTInt(ByteBuffer.wrap(buffer).getLong))
           })
+          //*
+        case FUint8 => nonStringValueValitioner(byte)(
+            () => handlePackType(toTInt(read1ByteUInt)))
+        case FUint16 =>
+          nonStringValueValitioner(byte)(() => {
+            readBytes_(2)
+            handlePackType(toTInt(ByteBuffer.wrap(buffer).getShort & 0x0000ffff))
+          })
+        case FUint32 =>
+          nonStringValueValitioner(byte)(() => {
+            readBytes_(4)
+            handlePackType(toTInt(ByteBuffer.wrap(buffer).getInt & 0x00000000ffffffffL))
+          })
+        case FUint64 =>
+          nonStringValueValitioner(byte)(() => {
+            readBytes_(8)
+            handlePackType(
+            		TInt(BigInteger.valueOf(ByteBuffer.wrap(buffer).getLong + Long.MaxValue + 1L).setBit(63)))
+          })
+           // */
         case FFloat32 =>
           nonStringValueValitioner(byte)(() => {
             readBytes_(4)
@@ -479,11 +500,18 @@ object Reader {
   private[pack] case object FInt16 extends Format
   private[pack] case object FInt32 extends Format
   private[pack] case object FInt64 extends Format
+  private[pack] case object FUint8 extends Format
+  private[pack] case object FUint16 extends Format
+  private[pack] case object FUint32 extends Format
+  private[pack] case object FUint64 extends Format
   private[pack] case object FFloat32 extends Format
   private[pack] case object FFloat64 extends Format
   private[pack] case object FBin8 extends Format
   private[pack] case object FBin16 extends Format
   private[pack] case object FBin32 extends Format
+  private[pack] case object FStr8 extends Format
+  private[pack] case object FStr16 extends Format
+  private[pack] case object FStr32 extends Format
   private[pack] case object FNs8 extends Format
   private[pack] case object FNs16 extends Format
   private[pack] case object FNs32 extends Format
@@ -497,45 +525,49 @@ object Reader {
   private[pack] case object FUnused extends Format
 
   private val formatMap = Map[Byte, Format](
-      nilByte           -> FNil,
-      collectionEndByte -> FColEnd,
-      falseByte         -> FFalse,
-      trueByte          -> FTrue,
-      int8Byte          -> FInt8,
-      int16Byte         -> FInt16,
-      int32Byte         -> FInt32,
-      int64Byte         -> FInt64,
-      float32Byte       -> FFloat32,
-      float64Byte       -> FFloat64,
-      bin8Byte          -> FBin8,
-      bin16Byte         -> FBin16,
-      bin32Byte         -> FBin32,
-      ns8Byte           -> FNs8,
-      ns16Byte          -> FNs16,
-      ns32Byte          -> FNs32,
-      classNameByte     -> FClassname,
-      sequenceByte          -> FSequence,
-      assortmentByte    -> FAssortment,
-      objectByte        -> FObject,
-      noKeyValueByte    -> FNoKeyValue
+      NilByte           -> FNil,
+      CollectionEndByte -> FColEnd,
+      FalseByte         -> FFalse,
+      TrueByte          -> FTrue,
+      Int8Byte          -> FInt8,
+      Int16Byte         -> FInt16,
+      Int32Byte         -> FInt32,
+      Int64Byte         -> FInt64,
+      Uint8Byte         -> FUint8,
+      Uint16Byte        -> FUint16,
+      Uint32Byte        -> FUint32,
+      Uint64Byte        -> FUint64,
+      Float32Byte       -> FFloat32,
+      Float64Byte       -> FFloat64,
+      Bin8Byte          -> FBin8,
+      Bin16Byte         -> FBin16,
+      Bin32Byte         -> FBin32,
+      Ns8Byte           -> FNs8,
+      Ns16Byte          -> FNs16,
+      Ns32Byte          -> FNs32,
+      ClassNameByte     -> FClassname,
+      SequenceByte      -> FSequence,
+      AssortmentByte    -> FAssortment,
+      ObjectByte        -> FObject,
+      NoKeyValueByte    -> FNoKeyValue
     )
 
   private val fixMap = Map[Byte, Byte => Format](
-      fixbinMask -> (new FFixbin(_)),
-      fixnsMask  -> (new FFixns(_))
+      FixbinMask -> (new FFixbin(_)),
+      FixnsMask  -> (new FFixns(_))
     )
 
   private[pack] def idFormat(byte: Byte) = {
 
     if (formatMap contains byte) formatMap(byte)
     else {
-      val value = byte & fixintMask
+      val value = byte & FixintMask
 
-      if (value == 0 || value == fixintMask) new Fixint(byte)
+      if (value == 0 || value == FixintMask) new Fixint(byte)
       else {
-        val mask = (byte & fixMask).toByte
+        val mask = (byte & FixMask).toByte
 
-        if (fixMap contains mask) fixMap(mask)((byte & lenMask).toByte)
+        if (fixMap contains mask) fixMap(mask)((byte & LenMask).toByte)
         else FUnused
       }
     }
@@ -567,7 +599,7 @@ object Reader {
   final case class SLocalName(parent: SQualified) extends SChild(parent)
 
   sealed abstract class PackType
-  final case class TInt(int: Long) extends PackType
+  final case class TInt(int: BigInteger) extends PackType
   case object TNil extends PackType
   case object TCollectionEnd extends PackType
   case object TTrue extends PackType
@@ -581,4 +613,6 @@ object Reader {
   case object TAssortment extends PackType
   case object TObject extends PackType
   case object TNoKeyValue extends PackType
+
+  def toTInt(int: Long) = TInt(BigInteger.valueOf(int))
 }

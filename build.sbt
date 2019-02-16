@@ -1,5 +1,5 @@
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.8"
 
 name := "Scala DataPack"
 organization := "Sledge"

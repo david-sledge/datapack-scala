@@ -1,5 +1,7 @@
 package scala.data
 
+import java.math.BigInteger
+
 package object pack {
 
   sealed abstract class QualifiedName
@@ -8,7 +10,7 @@ package object pack {
       extends QualifiedName
 
   sealed abstract class Token
-  final case class DInt(int: Long) extends Token
+  final case class DInt(int: BigInteger) extends Token
   final case class DFloat(float: Float) extends Token
   final case class DDouble(double: Double) extends Token
   case object DNil extends Token
@@ -21,4 +23,16 @@ package object pack {
       properties: Assortment[QualifiedName, Token] = Assortment()) extends Token
   final case class DAssortment(
       assortment: Assortment[Token, Token] = Assortment()) extends Token
+
+  def toDInt(int: Long) = DInt(BigInteger.valueOf(int))
+
+  val MaxUint8: Short = 0xff
+  val MaxUint16: Int = 0xffff
+  val MaxUint32: Long = 0xffffffffL
+  val MaxUint64: BigInteger = new BigInteger(1,
+      Array[Byte](
+          -1, -1, -1, -1,
+          -1, -1, -1, -1
+        )
+    )
 }
