@@ -1,4 +1,4 @@
-package scala.data.pack
+package scala.data.pack.stream
 
 import Reader._
 

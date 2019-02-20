@@ -1,11 +1,12 @@
-package scala.data.pack
+package scala.data.pack.stream
 
 import org.scalatest._
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
 
 import Writer._
-import FormatBytes._
+import scala.data.pack.IntMagnitudeTooLargeException
+import scala.data.pack.FormatBytes._
 
 class WriterSpec extends FlatSpec with Matchers {
   "A data pack writer" should "write a Nil" in {

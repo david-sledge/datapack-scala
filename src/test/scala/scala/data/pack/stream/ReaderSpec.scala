@@ -1,10 +1,10 @@
-package scala.data.pack
+package scala.data.pack.stream
 
 import org.scalatest._
 import java.io.ByteArrayInputStream
 import java.io.EOFException
 
-import FormatBytes._
+import scala.data.pack.FormatBytes._
 import Reader._
 
 class ReaderSpec extends FlatSpec with Matchers {

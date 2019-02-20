@@ -1,10 +1,10 @@
-package scala.data.pack
+package scala.data.pack.stream
 
-import FormatBytes._
+  import Reader._
+import scala.data.pack.FormatBytes._
 import java.io.EOFException
 import java.io.InputStream
 import java.nio.ByteBuffer
-import Reader._
 import java.math.BigInteger
 
 final class Reader(is: InputStream, handlePackType: PackType => Any) {

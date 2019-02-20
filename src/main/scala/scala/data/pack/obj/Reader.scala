@@ -1,14 +1,15 @@
-package scala.data.pack
+package scala.data.pack.obj
 
-import java.io.InputStream
 import scala.data.Assortment
 import scala.data.Assortment._
+import scala.data.pack.stream._
+import scala.data.pack.stream.Reader._
 
-import FormatBytes._
-import ObjectReader._
-import Reader._
+import scala.data.pack.FormatBytes._
 
-object ObjectReader {
+import java.io.InputStream
+
+object Reader {
 
   private abstract class Zipper
 

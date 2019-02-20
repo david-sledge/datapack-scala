@@ -1,14 +1,14 @@
-package scala.data.pack
+package scala.data.pack.obj
 
 import org.scalatest._
 import scala.data.Assortment
 import java.io.ByteArrayInputStream
 
-import FormatBytes._
-import ObjectReader._
+import scala.data.pack.FormatBytes._
+import Reader._
 import java.math.BigInteger
 
-class ObjectReaderSpec extends FlatSpec with Matchers {
+class ReaderSpec extends FlatSpec with Matchers {
   "The object reader" should "produce None with an empty input stream" in {
     val input = Array[Byte]()
     val expected = None

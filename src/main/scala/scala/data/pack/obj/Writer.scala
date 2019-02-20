@@ -1,10 +1,11 @@
-package scala.data.pack
+package scala.data.pack.obj
 
+import scala.data.pack.stream._
 import scala.data.Assortment
 import scala.data.Assortment._
 import java.io.OutputStream
 
-object ObjectWriter {
+object Writer {
   private def packChildren(children: List[Token], writer: Writer): Unit =
     children match {
       case token :: tail => {

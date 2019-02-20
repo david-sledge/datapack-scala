@@ -1,13 +1,11 @@
-package scala.data.pack
+package scala.data.pack.obj
 
 import org.scalatest._
 import scala.data.Assortment
 import scala.data.Assortment._
 import java.io.ByteArrayOutputStream
 
-import FormatBytes._
-import ObjectWriter._
-
+import scala.data.pack.FormatBytes._
 import Writer._
 
 class ObjectWriterSpec extends FlatSpec with Matchers {

@@ -1,9 +1,10 @@
-package scala.data.pack
+package scala.data.pack.stream
 
+import scala.data.pack._
+  import FormatBytes._
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.math.BigInteger
-import FormatBytes._
 
 class Writer(os: OutputStream) {
   import Writer._
