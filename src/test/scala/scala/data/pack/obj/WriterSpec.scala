@@ -8,7 +8,7 @@ import java.io.ByteArrayOutputStream
 import scala.data.pack.FormatBytes._
 import Writer._
 
-class ObjectWriterSpec extends FlatSpec with Matchers {
+class WriterSpec extends FlatSpec with Matchers {
   "The object writer" should "write a Nil" in {
     val data = DNil
     val expected = Array[Byte](NilByte)
@@ -35,7 +35,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
 
   it should "write a masked non-negative integer" in {
     val data = toDInt(15)
-    val expected = Array[Byte](0x0f.toByte)
+    val expected = Array[Byte](0x0f)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
@@ -51,7 +51,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
 
   it should "write a one-byte signed integer" in {
     val data = toDInt(127)
-    val expected = Array[Byte](Int8Byte, 0x7f.toByte)
+    val expected = Array[Byte](Int8Byte, 0x7f)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
@@ -59,7 +59,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
 
   it should "write a two-byte signed integer" in {
     val data = toDInt(-32768)
-    val expected = Array[Byte](Int16Byte, 0x80.toByte, 0.toByte)
+    val expected = Array[Byte](Int16Byte, 0x80.toByte, 0)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
@@ -67,7 +67,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
 
   it should "write a four-byte signed integer" in {
     val data = toDInt(-32769)
-    val expected = Array[Byte](Int32Byte, 0xff.toByte, 0xff.toByte, 0x7f.toByte, 0xff.toByte)
+    val expected = Array[Byte](Int32Byte, 0xff.toByte, 0xff.toByte, 0x7f, 0xff.toByte)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
@@ -83,7 +83,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
 
   it should "write a four-byte floating point decimal" in {
     val data = DFloat(-2f)
-    val expected = Array[Byte](Float32Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)
+    val expected = Array[Byte](Float32Byte, 0xc0.toByte, 0x00, 0x00, 0x00)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
@@ -91,23 +91,23 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
 
   it should "write an eight-byte floating point decimal" in {
     val data = DDouble(-2)
-    val expected = Array[Byte](Float64Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)
+    val expected = Array[Byte](Float64Byte, 0xc0.toByte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
   }
 
   it should "write brief binary data" in {
-    val data = DBin(List[Byte](0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte))
-    val expected = Array[Byte]((FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte)
+    val data = DBin(List[Byte](0x21, 0x21, 0x21, 0x21, 0x21))
+    val expected = Array[Byte]((FixbinMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
   }
 
   it should "write not-so-brief binary data" in {
-    val data = DBin(List.fill(32)(0x21.toByte))
-    val expected = (Bin8Byte :: 32.toByte :: List.fill(32)(0x21.toByte)).toArray
+    val data = DBin(List.fill(32)(0x21))
+    val expected = (Bin8Byte :: 32 :: List.fill(32)(0x21)).toArray
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected
@@ -130,7 +130,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
     val expected = Array[Byte](
         AssortmentByte,
         // key
-        0x0f.toByte,
+        0x0f,
         // value
         0xff.toByte,
         // key without value
@@ -159,12 +159,12 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
             toDInt(-1)) :: Nil)
     val expected = Array[Byte](
         SequenceByte,
-        0x0f.toByte,
+        0x0f,
         0xff.toByte,
         0xff.toByte,
         AssortmentByte,
         // key
-        0x0f.toByte,
+        0x0f,
         // value
         0xff.toByte,
         // key without value
@@ -179,7 +179,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
   it should "allow a classed (local name only) empty sequence" in {
     val data = DSequence(Some(Name("!!!!!")))
     val expected = Array[Byte](SequenceByte, ClassNameByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
     pack(data, output)
@@ -189,8 +189,8 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
   it should "allow a classed (fully qualified name) empty sequence" in {
     val data = DSequence(Some(FullName("!!!!!", "!!!!!")))
     val expected = Array[Byte](SequenceByte, ClassNameByte,
-        (FixnsMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixnsMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
+        (FixstrMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
     pack(data, output)
@@ -206,13 +206,13 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
             (toDInt(15), toDInt(-1)) +
             toDInt(-1)) :: Nil)
     val expected = Array[Byte](SequenceByte, ClassNameByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        0x0f.toByte,
+        (FixstrMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
+        0x0f,
         0xff.toByte,
         0xff.toByte,
         AssortmentByte,
         // key
-        0x0f.toByte,
+        0x0f,
         // value
         0xff.toByte,
         // key without value
@@ -233,14 +233,14 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
             (toDInt(15), toDInt(-1)) +
             toDInt(-1)) :: Nil)
     val expected = Array[Byte](SequenceByte, ClassNameByte,
-        (FixnsMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        0x0f.toByte,
+        (FixnsMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
+        (FixstrMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
+        0x0f,
         0xff.toByte,
         0xff.toByte,
         AssortmentByte,
         // key
-        0x0f.toByte,
+        0x0f,
         // value
         0xff.toByte,
         // key without value
@@ -263,9 +263,9 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
   it should "allow a non-empty object" in {
     val data = DObject(None, Assortment[QualifiedName, Token]() + (Name("!!!!!"), DBin(List(33, 33, 33, 33, 33))))
     val expected = Array[Byte](ObjectByte,
-      (FixbinMask | 0x05).toByte,
-      0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-      (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+      (FixstrMask | 0x05).toByte,
+      0x21.toByte, 0x21.toByte, 0x21, 0x21, 0x21,
+      (FixbinMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
       CollectionEndByte)
     val output = new ByteArrayOutputStream
     pack(data, output)
@@ -274,7 +274,7 @@ class ObjectWriterSpec extends FlatSpec with Matchers {
 
   it should "allow a classed (local name only) empty object" in {
     val data = DObject(Some(Name("")))
-    val expected = Array[Byte](ObjectByte, ClassNameByte, (FixbinMask | 0x0).toByte, CollectionEndByte)
+    val expected = Array[Byte](ObjectByte, ClassNameByte, (FixstrMask | 0x0).toByte, CollectionEndByte)
     val output = new ByteArrayOutputStream
     pack(data, output)
     output.toByteArray shouldBe expected

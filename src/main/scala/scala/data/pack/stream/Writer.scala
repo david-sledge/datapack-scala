@@ -221,16 +221,24 @@ SRoot: no parent
     }
   }
 
+  private val binByteSizes =
+    Array[Byte](FixbinMask, Bin8Byte, Bin16Byte, Bin32Byte)
+  private val strByteSizes =
+    Array[Byte](FixstrMask, Str8Byte, Str16Byte, Str32Byte)
+  private val nsByteSizes =
+    Array[Byte](FixnsMask, Ns8Byte, Ns16Byte, Ns32Byte)
+
+  def writeStr(string: String) = {
+    validateValueState
+
+    writeByteArray(strByteSizes, string.getBytes("utf-8"))
+  }
+
   def writeBin(data: Array[Byte]) = {
     validateValueState
 
     writeByteArray(binByteSizes, data)
   }
-
-  private val binByteSizes =
-    Array[Byte](FixbinMask, Bin8Byte, Bin16Byte, Bin32Byte)
-  private val nsByteSizes =
-    Array[Byte](FixnsMask, Ns8Byte, Ns16Byte, Ns32Byte)
 
   private def writeByteArray(byteSizes: Array[Byte], data: Array[Byte]) = {
     if (data.length < 0x20) os.write(byteSizes(0) | data.length)
@@ -252,7 +260,7 @@ SRoot: no parent
       case Some(name) => writeByteArray(nsByteSizes, name.getBytes("utf-8"))
     }
 
-    writeByteArray(binByteSizes, localName.getBytes("utf-8"))
+    writeByteArray(strByteSizes, localName.getBytes("utf-8"))
   }
 
   private def writeClassName(className: Option[(Option[String], String)]) = {

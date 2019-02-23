@@ -43,60 +43,60 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
   private val noKeyValueValueValitioner =
     (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => {
+          init = () => throw new ReadStateException(packType, _state),
+          sequence = (_) => throw new ReadStateException(packType, _state),
+          assortment = (_) => {
             handler()
             _state = SMappingValue(_state.asInstanceOf[SMappable])
           },
-          (_) => {
+          obj = (_) => {
             handler()
             _state = SMappingValue(_state.asInstanceOf[SMappable])
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          sequenceStart = (_) => throw new ReadStateException(packType, _state),
+          objectStart = (parent) => {
             handler()
             _state = SMappingValue(parent)
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          className = (_) => throw new ReadStateException(packType, _state),
+          entryValue = (parent) => {
             handler()
             _state = parent
           },
-          (_) => throw new ReadStateException(packType, _state)
+          localName = (_) => throw new ReadStateException(packType, _state)
         )
     }
 
   private val collectionEndValitioner =
     (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => throw new ReadStateException(packType, _state),
-          (parent) => {
+          init = () => throw new ReadStateException(packType, _state),
+          sequence = (parent) => {
             handler()
             _state = parent
           },
-          (parent) => {
+          assortment = (parent) => {
             handler()
             _state = parent
           },
-          (parent) => {
+          obj = (parent) => {
             handler()
             _state = parent
           },
-          (parent) => parent match {
+          sequenceStart = (parent) => parent match {
             case SSequence(gparent) => {
               handler()
               _state = gparent
             }
           },
-          (parent) => parent match {
+          objectStart = (parent) => parent match {
             case SObject(gparent) => {
               handler()
               _state = gparent
             }
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          className = (_) => throw new ReadStateException(packType, _state),
+          entryValue = (parent) => {
             handlePackType(TNoKeyValue)
              _state = parent
             handler()
@@ -105,194 +105,221 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
               case SObject(gparent) => gparent
             }
           },
-          (_) => throw new ReadStateException(packType, _state)
+          localName = (_) => throw new ReadStateException(packType, _state)
         )
       validateAndTransitionState(
-          () => (),
-          (_) => (),
-          (_) => _state = SMappingValue(_state.asInstanceOf[SMappable]),
-          (_) => throw new Exception(
+          init = () => (),
+          sequence = (_) => (),
+          assortment = (_) => _state = SMappingValue(_state.asInstanceOf[SMappable]),
+          obj = (_) => throw new Exception(
               "Programmatic error.  Flog the developer!"),
-          (_) => throw new Exception(
+          sequenceStart = (_) => throw new Exception(
               "Programmatic error.  Flog the developer!"),
-          (_) => throw new Exception(
+          objectStart = (_) => throw new Exception(
               "Programmatic error.  Flog the developer!"),
-          (_) => throw new Exception(
+          className = (_) => throw new Exception(
               "Programmatic error.  Flog the developer!"),
-          (parent) => _state = parent,
-          (_) => throw new Exception("Programmatic error.  Flog the developer!")
+          entryValue = (parent) => _state = parent,
+          localName = (_) => throw new Exception("Programmatic error.  Flog the developer!")
         )
     }
 
   private val nonStringValueValitioner =
     (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => handler(),
-          (_) => handler(),
-          (_) => {
+          init = () => handler(),
+          sequence = (_) => handler(),
+          assortment = (_) => {
             handler()
             _state = SMappingValue(_state.asInstanceOf[SMappable])
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          obj = (_) => throw new ReadStateException(packType, _state),
+          sequenceStart = (parent) => {
             handler()
             _state = parent
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          objectStart = (_) => throw new ReadStateException(packType, _state),
+          className = (_) => throw new ReadStateException(packType, _state),
+          entryValue = (parent) => {
             handler()
             _state = parent
           },
-          (_) => throw new ReadStateException(packType, _state)
+          localName = (_) => throw new ReadStateException(packType, _state)
         )
     }
 
   private val classNameValitioner =
     (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          init = () => throw new ReadStateException(packType, _state),
+          sequence = (_) => throw new ReadStateException(packType, _state),
+          assortment = (_) => throw new ReadStateException(packType, _state),
+          obj = (_) => throw new ReadStateException(packType, _state),
+          sequenceStart = (parent) => {
             handler()
             _state = SClassName(parent)
           },
-          (parent) => {
+          objectStart = (parent) => {
             handler()
             _state = SClassName(parent)
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state)
+          className = (_) => throw new ReadStateException(packType, _state),
+          entryValue = (_) => throw new ReadStateException(packType, _state),
+          localName = (_) => throw new ReadStateException(packType, _state)
         )
     }
 
   private val objectSequenceValitioner =
     (nsCollectionState: State => SClassable) => (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => {
+          init = () => {
             handler()
             _state = SClass(nsCollectionState(_state))
           },
-          (_) => {
+          sequence = (_) => {
             handler()
             _state = SClass(nsCollectionState(_state))
           },
-          (_) => {
+          assortment = (_) => {
             handler()
             _state = SClass(nsCollectionState(_state))
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          obj = (_) => throw new ReadStateException(packType, _state),
+          sequenceStart = (parent) => {
             handler()
             _state = SClass(nsCollectionState(parent))
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => {
+          objectStart = (_) => throw new ReadStateException(packType, _state),
+          className = (_) => throw new ReadStateException(packType, _state),
+          entryValue = (_) => {
             handler()
             _state = SClass(nsCollectionState(_state))
           },
-          (_) => throw new ReadStateException(packType, _state)
+          localName = (_) => throw new ReadStateException(packType, _state)
         )
     }
 
   private val assortmentValitioner =
     (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => {
+          init = () => {
             handler()
             _state = SAssortment(_state.asInstanceOf[SValue])
           },
-          (_) => {
+          sequence = (_) => {
             handler()
             _state = SAssortment(_state.asInstanceOf[SValue])
           },
-          (_) => {
+          assortment = (_) => {
             handler()
             _state = SAssortment(_state.asInstanceOf[SValue])
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          obj = (_) => throw new ReadStateException(packType, _state),
+          sequenceStart = (parent) => {
             handler()
             _state = SAssortment(parent)
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => {
+          objectStart = (_) => throw new ReadStateException(packType, _state),
+          className = (_) => throw new ReadStateException(packType, _state),
+          entryValue = (_) => {
             handler()
             _state = SAssortment(_state.asInstanceOf[SValue])
           },
-          (_) => throw new ReadStateException(packType, _state)
+          localName = (_) => throw new ReadStateException(packType, _state)
         )
     }
 
   private val nsValitioner = (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => throw new ReadStateException(packType, _state),
-          (_) => {
+          init = () => throw new ReadStateException(packType, _state),
+          sequence = (_) => throw new ReadStateException(packType, _state),
+          assortment = (_) => throw new ReadStateException(packType, _state),
+          obj = (_) => {
             handler()
             _state = SLocalName(_state.asInstanceOf[SQualified])
           },
-          (_) => throw new ReadStateException(packType, _state),
-          (parent) => {
+          sequenceStart = (_) => throw new ReadStateException(packType, _state),
+          objectStart = (parent) => {
             handler()
             _state = SLocalName(parent match {case gparent @ SObject(_) => gparent})
           },
-          (_) => {
+          className = (_) => {
             handler()
             _state = SLocalName(_state.asInstanceOf[SQualified])
           },
-          (_) => {
+          entryValue = (_) => {
             handler()
             throw new ReadStateException(packType, _state)
           },
-          (_) => {
+          localName = (_) => {
             handler()
             throw new ReadStateException(packType, _state)
           }
         )
     }
 
-  private val binValitioner = (packType: Byte) => (handler: () => Unit) => {
+//*
+  private val strValitioner = (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
-          () => handler(),
-          (_) => handler(),
-          (_) => {
+          init = () => handler(),
+          sequence = (_) => handler(),
+          assortment = (_) => {
             handler()
             _state = SMappingValue(_state.asInstanceOf[SMappable])
           },
-          (_) => {
+          obj = (_) => {
             handler()
             _state = SMappingValue(_state.asInstanceOf[SMappable])
           },
-          (parent) => {
+          sequenceStart = (parent) => {
             handler()
             _state = parent
           },
-          (parent) => {
+          objectStart = (parent) => {
             handler()
             _state = SMappingValue(parent)
           },
-          (parent) => {
+          className = (parent) => {
             handler()
             _state = parent
           },
-          (parent) => {
+          entryValue = (parent) => {
             handler()
             _state = parent
           },
-          (parent) => {
+          localName = (parent) => {
             handler()
             _state = parent match {
               case SClassName(gparent) => gparent
               case _ => SMappingValue(parent.asInstanceOf[SMappable])
             }
           }
+        )
+    }
+ // */
+  private val binValitioner = (packType: Byte) => (handler: () => Unit) => {
+      validateAndTransitionState(
+          init = () => handler(),
+          sequence = (_) => handler(),
+          assortment = (_) => {
+            handler()
+            _state = SMappingValue(_state.asInstanceOf[SMappable])
+          },
+          obj = (_) => {
+            handler()
+            _state = SMappingValue(_state.asInstanceOf[SMappable])
+          },
+          sequenceStart = (parent) => {
+            handler()
+            _state = parent
+          },
+          objectStart = (_) => throw new ReadStateException(packType, _state),
+          className = (_) => throw new ReadStateException(packType, _state),
+          entryValue = (parent) => {
+            handler()
+            _state = parent
+          },
+          localName = (_) => throw new ReadStateException(packType, _state)
         )
     }
 
@@ -436,7 +463,29 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
             readBytes_(length, buffer)
             handlePackType(TBin(buffer.toList))
           })
-        case FNs8 =>
+//*
+        case FStr8 =>
+          strValitioner(byte)(() => {
+            val length = read1ByteUInt
+            val buffer = new Array[Byte](length)
+            readBytes_(length, buffer)
+            handlePackType(TStr(new String(buffer, "utf-8")))
+          })
+        case FStr16 =>
+          strValitioner(byte)(() => {
+            val length = read2ByteUInt
+            val buffer = new Array[Byte](length)
+            readBytes_(length, buffer)
+            handlePackType(TStr(new String(buffer, "utf-8")))
+          })
+        case FStr32 =>
+          strValitioner(byte)(() => {
+            val length = read4ByteUInt
+            val buffer = new Array[Byte](length)
+            readBytes_(length, buffer)
+            handlePackType(TStr(new String(buffer, "utf-8")))
+          })
+// */        case FNs8 =>
           nsValitioner(byte)(() => {
             val length = read1ByteUInt
             val buffer = new Array[Byte](length)
@@ -471,6 +520,12 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
             val buffer = new Array[Byte](length)
             readBytes_(length, buffer)
             handlePackType(TBin(buffer.toList))
+          })
+        case FFixstr(length) =>
+          strValitioner(byte)(() => {
+            val buffer = new Array[Byte](length)
+            readBytes_(length, buffer)
+            handlePackType(TStr(new String(buffer, "utf-8")))
           })
         case FFixns(length) =>
           nsValitioner(byte)(() => {
@@ -521,6 +576,7 @@ object Reader {
   private[pack] case object FObject extends Format
   private[pack] case object FNoKeyValue extends Format
   private[pack] final case class FFixbin(length: Int) extends Format
+  private[pack] final case class FFixstr(length: Int) extends Format
   private[pack] final case class FFixns(length: Int) extends Format
   private[pack] case object FUnused extends Format
 
@@ -542,6 +598,9 @@ object Reader {
       Bin8Byte          -> FBin8,
       Bin16Byte         -> FBin16,
       Bin32Byte         -> FBin32,
+      Str8Byte          -> FStr8,
+      Str16Byte         -> FStr16,
+      Str32Byte         -> FStr32,
       Ns8Byte           -> FNs8,
       Ns16Byte          -> FNs16,
       Ns32Byte          -> FNs32,
@@ -554,6 +613,7 @@ object Reader {
 
   private val fixMap = Map[Byte, Byte => Format](
       FixbinMask -> (new FFixbin(_)),
+      FixstrMask -> (new FFixstr(_)),
       FixnsMask  -> (new FFixns(_))
     )
 
@@ -608,6 +668,7 @@ object Reader {
   final case class TDouble(double: Double) extends PackType
   case object TClassName extends PackType
   final case class TBin(bin: List[Byte]) extends PackType
+  final case class TStr(str: String) extends PackType
   final case class TNs(ns: String) extends PackType
   case object TSequence extends PackType
   case object TAssortment extends PackType

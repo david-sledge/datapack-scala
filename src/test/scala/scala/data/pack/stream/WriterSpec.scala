@@ -281,7 +281,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val expected = List(
         SequenceByte,
         ClassNameByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         CollectionEndByte
       )
@@ -300,7 +300,7 @@ class WriterSpec extends FlatSpec with Matchers {
         ClassNameByte,
         (FixnsMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         CollectionEndByte
       )
@@ -341,7 +341,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val expected = List(
         ObjectByte,
         ClassNameByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         CollectionEndByte
       )
@@ -360,7 +360,7 @@ class WriterSpec extends FlatSpec with Matchers {
         ClassNameByte,
         (FixnsMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         CollectionEndByte
       )
@@ -433,7 +433,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val expected = List(
         SequenceByte,
         ClassNameByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         0x0f.toByte,
         0xff.toByte,
@@ -470,7 +470,7 @@ class WriterSpec extends FlatSpec with Matchers {
         ClassNameByte,
         (FixnsMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         0x0f.toByte,
         0xff.toByte,
@@ -504,12 +504,12 @@ class WriterSpec extends FlatSpec with Matchers {
     val writer = new Writer(buffer)
     val expected = List(
         ObjectByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         SequenceByte,
         ClassNameByte,
         (FixnsMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         0x0f.toByte,
         0xff.toByte,
@@ -547,14 +547,14 @@ class WriterSpec extends FlatSpec with Matchers {
     val expected = List(
         ObjectByte,
         ClassNameByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         SequenceByte,
         ClassNameByte,
         (FixnsMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         0x0f.toByte,
         0xff.toByte,
@@ -594,14 +594,14 @@ class WriterSpec extends FlatSpec with Matchers {
         ClassNameByte,
         (FixnsMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         SequenceByte,
         ClassNameByte,
         (FixnsMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 5).toByte,
+        (FixstrMask | 5).toByte,
         0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         0x0f.toByte,
         0xff.toByte,

@@ -18,6 +18,7 @@ package object obj {
   case object DTrue extends Token
   case object DFalse extends Token
   final case class DBin(bin: List[Byte]) extends Token
+  final case class DStr(str: String) extends Token
   final case class DSequence(className: Option[QualifiedName] = None,
       Sequence: List[Token] = Nil) extends Token
   final case class DObject(className: Option[QualifiedName] = None,

@@ -81,6 +81,7 @@ object Writer {
       case DInt(int) => writeBigInt(int)
       case DFloat(float) => writeFloat(float)
       case DDouble(float) => writeDouble(float)
+      case DStr(str) => writeStr(str)
       case DBin(list) => writeBin(list.toArray)
       case DSequence(className, list) => {
         writeSequenceStart(className match {

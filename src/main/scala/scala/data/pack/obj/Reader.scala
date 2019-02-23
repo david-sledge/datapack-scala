@@ -131,32 +131,41 @@ object Reader {
         case _ =>
           throw new Exception("Programmatic error.  Flog the developer!")
       })
+//*
+    case TStr(str) => {
 
-    case TBin(list) => {
-      lazy val localName = new String(list.toArray, "utf-8")
       zipper match {
-        case z : AZValueHole => zipFoward(z, DBin(list))
-        case z @ ZObjectHead(_, _) => Right(ZName(z, Name(localName)))
-        case z @ ZObject(_, _) => Right(ZName(z, Name(localName)))
+        case z : AZValueHole => zipFoward(z, DStr(str))
+        case z @ ZObjectHead(_, _) => Right(ZName(z, Name(str)))
+        case z @ ZObject(_, _) => Right(ZName(z, Name(str)))
         case ZClassName(zipper_) => Right(zipper_ match {
           case ZSequenceHead(zipper__, None) =>
-            ZSequenceHead(zipper__, Some(Name(localName)))
+            ZSequenceHead(zipper__, Some(Name(str)))
           case ZObjectHead(zipper__, None) =>
-            ZObjectHead(zipper__, Some(Name(localName)))
+            ZObjectHead(zipper__, Some(Name(str)))
           case _ =>
             throw new Exception("Programmatic error.  Flog the developer!")
         })
         case ZQualifiedName(ZClassName(zipper_), namespaceName) =>
           Right(zipper_ match {
             case ZSequenceHead(zipper__, None) =>
-              ZSequenceHead(zipper__, Some(FullName(namespaceName, localName)))
+              ZSequenceHead(zipper__, Some(FullName(namespaceName, str)))
             case ZObjectHead(zipper__, None) =>
-              ZObjectHead(zipper__, Some(FullName(namespaceName, localName)))
+              ZObjectHead(zipper__, Some(FullName(namespaceName, str)))
             case _ =>
               throw new Exception("Programmatic error.  Flog the developer!")
           })
         case ZNamespaceName(zipper_, namespaceName) =>
-          Right(ZName(zipper_, FullName(namespaceName, localName)))
+          Right(ZName(zipper_, FullName(namespaceName, str)))
+        case _ =>
+          throw new Exception("Programmatic error.  Flog the developer!")
+      }
+    }
+ // */
+    case TBin(list) => {
+
+      zipper match {
+        case z : AZValueHole => zipFoward(z, DBin(list))
         case _ =>
           throw new Exception("Programmatic error.  Flog the developer!")
       }

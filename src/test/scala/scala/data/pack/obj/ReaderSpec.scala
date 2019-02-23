@@ -146,7 +146,7 @@ class ReaderSpec extends FlatSpec with Matchers {
 
   it should "allow a classed (local name only) empty sequence" in {
     val input = Array[Byte](SequenceByte, ClassNameByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         CollectionEndByte)
     val expected = Some(DSequence(Some(Name("!!!!!"))))
     unpack(new ByteArrayInputStream(input)) shouldBe expected
@@ -155,7 +155,7 @@ class ReaderSpec extends FlatSpec with Matchers {
   it should "allow a classed (fully qualified name) empty sequence" in {
     val input = Array[Byte](SequenceByte, ClassNameByte,
         (FixnsMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         CollectionEndByte)
     val expected = Some(DSequence(Some(FullName("!!!!!", "!!!!!"))))
     unpack(new ByteArrayInputStream(input)) shouldBe expected
@@ -163,7 +163,7 @@ class ReaderSpec extends FlatSpec with Matchers {
 
   it should "allow a classed (local name only) non-empty sequence" in {
     val input = Array[Byte](SequenceByte, ClassNameByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         0x0f.toByte,
         0xff.toByte,
         0xff.toByte,
@@ -189,7 +189,7 @@ class ReaderSpec extends FlatSpec with Matchers {
   it should "allow a classed (fully qualified name) non-empty sequence" in {
     val input = Array[Byte](SequenceByte, ClassNameByte,
         (FixnsMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
-        (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
+        (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
         0x0f.toByte,
         0xff.toByte,
         0xff.toByte,
@@ -219,13 +219,13 @@ class ReaderSpec extends FlatSpec with Matchers {
   }
 
   it should "allow a non-empty object" in {
-    val input = Array[Byte](ObjectByte, (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, CollectionEndByte)
+    val input = Array[Byte](ObjectByte, (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, (FixbinMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, CollectionEndByte)
     val expected = Some(DObject(None, Assortment[QualifiedName, Token]() + (Name("!!!!!"), DBin(List(33, 33, 33, 33, 33)))))
     unpack(new ByteArrayInputStream(input)) shouldBe expected
   }
 
   it should "allow a classed (local name only) empty object" in {
-    val input = Array[Byte](ObjectByte, ClassNameByte, (FixbinMask | 0x0).toByte, CollectionEndByte)
+    val input = Array[Byte](ObjectByte, ClassNameByte, (FixstrMask | 0x0).toByte, CollectionEndByte)
     val expected = Some(DObject(Some(Name(""))))
     unpack(new ByteArrayInputStream(input)) shouldBe expected
   }
