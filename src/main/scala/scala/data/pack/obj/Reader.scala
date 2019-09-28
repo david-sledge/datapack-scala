@@ -7,8 +7,6 @@ import scala.data.pack.stream.Reader._
 
 import scala.data.pack.FormatBytes._
 
-import java.io.InputStream
-
 object Reader {
 
   private abstract class Zipper
@@ -197,10 +195,10 @@ object Reader {
     case _ => throw new Exception("Programmatic error.  Flog the developer!")
   }
 
-  def unpack(is: InputStream) = {
+  def unpack[S, T](s: S, onSome: Token => T, onNone: => T)(implicit r: Read[S]) = {
     var obj: Either[Token, Zipper] = Right(ZRoot)
 
-    val reader = new Reader(is, packType => {
+    val reader = new Reader(s, packType => {
       obj = handler(obj match {
         case Right(zipper) => zipper
         case _ =>
@@ -219,8 +217,8 @@ object Reader {
 
     readToken
     obj match {
-      case Right(_) => None
-      case Left(data) => Some(data)
+      case Right(_) => onNone
+      case Left(data) => onSome(data)
     }
   }
 }

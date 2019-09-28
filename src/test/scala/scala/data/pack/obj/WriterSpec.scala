@@ -1,19 +1,22 @@
 package scala.data.pack.obj
 
+  import Writer._
+
+import scala.data.pack.stream.io._
 import org.scalatest._
 import scala.data.Assortment
 import scala.data.Assortment._
 import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 
 import scala.data.pack.FormatBytes._
-import Writer._
 
 class WriterSpec extends FlatSpec with Matchers {
   "The object writer" should "write a Nil" in {
     val data = DNil
     val expected = Array[Byte](NilByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -21,7 +24,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DFalse
     val expected = Array[Byte](FalseByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -29,7 +32,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DTrue
     val expected = Array[Byte](TrueByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -37,7 +40,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = toDInt(15)
     val expected = Array[Byte](0x0f)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -45,7 +48,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = toDInt(-1)
     val expected = Array[Byte](0xff.toByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -53,7 +56,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = toDInt(127)
     val expected = Array[Byte](Int8Byte, 0x7f)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -61,7 +64,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = toDInt(-32768)
     val expected = Array[Byte](Int16Byte, 0x80.toByte, 0)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -69,7 +72,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = toDInt(-32769)
     val expected = Array[Byte](Int32Byte, 0xff.toByte, 0xff.toByte, 0x7f, 0xff.toByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -77,7 +80,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = toDInt(-1085102592571150096l)
     val expected = Array[Byte](Int64Byte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -85,7 +88,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DFloat(-2f)
     val expected = Array[Byte](Float32Byte, 0xc0.toByte, 0x00, 0x00, 0x00)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -93,7 +96,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DDouble(-2)
     val expected = Array[Byte](Float64Byte, 0xc0.toByte, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -101,7 +104,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DBin(List[Byte](0x21, 0x21, 0x21, 0x21, 0x21))
     val expected = Array[Byte]((FixbinMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -109,7 +112,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DBin(List.fill(32)(0x21))
     val expected = (Bin8Byte :: 32 :: List.fill(32)(0x21)).toArray
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -117,7 +120,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DAssortment(Assortment())
     val expected = Array[Byte](AssortmentByte, CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
 
 //    val input = Array[Byte](AssortmentByte, CollectionEndByte)
@@ -137,7 +140,7 @@ class WriterSpec extends FlatSpec with Matchers {
         0xff.toByte,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -145,7 +148,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DSequence(None, List())
     val expected = Array[Byte](SequenceByte, CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -172,7 +175,7 @@ class WriterSpec extends FlatSpec with Matchers {
         CollectionEndByte,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -182,7 +185,7 @@ class WriterSpec extends FlatSpec with Matchers {
         (FixstrMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -193,7 +196,7 @@ class WriterSpec extends FlatSpec with Matchers {
         (FixstrMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -220,7 +223,7 @@ class WriterSpec extends FlatSpec with Matchers {
         CollectionEndByte,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -248,7 +251,7 @@ class WriterSpec extends FlatSpec with Matchers {
         CollectionEndByte,
         CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -256,7 +259,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DObject(None)
     val expected = Array[Byte](ObjectByte, CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -268,7 +271,7 @@ class WriterSpec extends FlatSpec with Matchers {
       (FixbinMask | 0x05).toByte, 0x21, 0x21, 0x21, 0x21, 0x21,
       CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 
@@ -276,7 +279,7 @@ class WriterSpec extends FlatSpec with Matchers {
     val data = DObject(Some(Name("")))
     val expected = Array[Byte](ObjectByte, ClassNameByte, (FixstrMask | 0x0).toByte, CollectionEndByte)
     val output = new ByteArrayOutputStream
-    pack(data, output)
+    pack(data, output.asInstanceOf[OutputStream])
     output.toByteArray shouldBe expected
   }
 }

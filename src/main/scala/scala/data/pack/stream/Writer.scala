@@ -1,12 +1,12 @@
 package scala.data.pack.stream
 
+  import Write._
 import scala.data.pack._
   import FormatBytes._
-import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.math.BigInteger
 
-class Writer(os: OutputStream) {
+class Writer[D](d: D)(implicit w: Write[D]) {
   import Writer._
 
 /*
@@ -50,19 +50,19 @@ SRoot: no parent
     case SItem(parent) => {
       _state = SMappingValue(parent match {
         case SAfterEntry(gparent) => {
-          os.write(NoKeyValueByte)
+          writeByte(d, NoKeyValueByte)
           gparent
         }
         case s:SMappable => s
         case _ => throw new WriteStateException(_state)
       })
 
-      os.write(NoKeyValueByte)
+      writeByte(d, NoKeyValueByte)
     }
     case SMappingValue(parent) => ()
     case SAfterEntry(parent @ SAssortment(_)) => {
       // write no value, pop state
-      os.write(NoKeyValueByte)
+      writeByte(d, NoKeyValueByte)
       _state = parent
     }
     case SAfterEntry(SObject(_)) | SObject(_) =>
@@ -72,19 +72,19 @@ SRoot: no parent
 
   def writeNil = {
     validateValueState
-    os.write(NilByte)
+    writeByte(d, NilByte)
     valueTransition
   }
 
   def writeFalse = {
     validateValueState
-    os.write(FalseByte)
+    writeByte(d, FalseByte)
     valueTransition
   }
 
   def writeTrue = {
     validateValueState
-    os.write(TrueByte)
+    writeByte(d, TrueByte)
     valueTransition
   }
 
@@ -104,7 +104,7 @@ SRoot: no parent
       case SRoot => throw new WriteStateException(_state)
     }
 
-    os.write(CollectionEndByte)
+    writeByte(d, CollectionEndByte)
     valueTransition
   }
 
@@ -126,61 +126,61 @@ SRoot: no parent
   def writeFloat(float: Float) = {
     validateValueState
 
-    os.write(Float32Byte)
-    os.write(ByteBuffer.allocate(4).putFloat(float).array)
+    writeByte(d, Float32Byte)
+    write(d, ByteBuffer.allocate(4).putFloat(float).array)
   }
 
   def writeDouble(double: Double) = {
     validateValueState
 
-    os.write(Float64Byte)
-    os.write(ByteBuffer.allocate(8).putDouble(double).array)
+    writeByte(d, Float64Byte)
+    write(d, ByteBuffer.allocate(8).putDouble(double).array)
   }
 
   def writeBigInt(int: BigInteger) = {
     validateValueState
 
     if (BigInteger.valueOf(FixintMask).compareTo(int) <= 0
-        && int.compareTo(BigInteger.valueOf(NilByte)) < 0) os.write(int.intValue)
+        && int.compareTo(BigInteger.valueOf(NilByte)) < 0) writeByte(d, int.intValue)
     else if (BigInteger.valueOf(Byte.MinValue).compareTo(int) <= 0
         && int.compareTo(BigInteger.valueOf(Byte.MaxValue)) <= 0) {
-      os.write(Int8Byte)
-      os.write(int.intValue)
+      writeByte(d, Int8Byte)
+      writeByte(d, int.intValue)
     }
     else if (BigInteger.valueOf(Byte.MaxValue).compareTo(int) < 0
         && int.compareTo(BigInteger.valueOf(MaxUint8)) <= 0) {
-      os.write(Uint8Byte)
-      os.write(int.intValue)
+      writeByte(d, Uint8Byte)
+      writeByte(d, int.intValue)
     }
     else if (BigInteger.valueOf(Short.MinValue).compareTo(int) <= 0
         && int.compareTo(BigInteger.valueOf(Short.MaxValue)) <= 0) {
-      os.write(Int16Byte)
-      os.write(ByteBuffer.allocate(2).putShort(int.shortValue).array)
+      writeByte(d, Int16Byte)
+      write(d, ByteBuffer.allocate(2).putShort(int.shortValue).array)
     }
     else if (BigInteger.valueOf(Short.MaxValue).compareTo(int) < 0
         && int.compareTo(BigInteger.valueOf(MaxUint16)) <= 0) {
-      os.write(Uint16Byte)
-      os.write(ByteBuffer.allocate(2).putShort(int.shortValue).array)
+      writeByte(d, Uint16Byte)
+      write(d, ByteBuffer.allocate(2).putShort(int.shortValue).array)
     }
     else if (BigInteger.valueOf(Int.MinValue).compareTo(int) <= 0
         && int.compareTo(BigInteger.valueOf(Int.MaxValue)) <= 0) {
-      os.write(Int32Byte)
-      os.write(ByteBuffer.allocate(4).putInt(int.intValue).array)
+      writeByte(d, Int32Byte)
+      write(d, ByteBuffer.allocate(4).putInt(int.intValue).array)
     }
     else if (BigInteger.valueOf(Int.MaxValue).compareTo(int) < 0
         && int.compareTo(BigInteger.valueOf(MaxUint32)) <= 0) {
-      os.write(Uint32Byte)
-      os.write(ByteBuffer.allocate(4).putInt(int.intValue).array)
+      writeByte(d, Uint32Byte)
+      write(d, ByteBuffer.allocate(4).putInt(int.intValue).array)
     }
     else if (BigInteger.valueOf(Long.MinValue).compareTo(int) <= 0
         && int.compareTo(BigInteger.valueOf(Long.MaxValue)) <= 0) {
-      os.write(Int64Byte)
-      os.write(ByteBuffer.allocate(8).putLong(int.longValue).array)
+      writeByte(d, Int64Byte)
+      write(d, ByteBuffer.allocate(8).putLong(int.longValue).array)
     }
     else if (BigInteger.valueOf(Long.MaxValue).compareTo(int) < 0
         && int.compareTo(MaxUint64) <= 0) {
-      os.write(Uint64Byte)
-      os.write(ByteBuffer.allocate(8).putLong(int.longValue).array)
+      writeByte(d, Uint64Byte)
+      write(d, ByteBuffer.allocate(8).putLong(int.longValue).array)
     }
     else {
       throw new IntMagnitudeTooLargeException(int)
@@ -190,34 +190,34 @@ SRoot: no parent
   def writeInt(int: Long) = {
     validateValueState
 
-    if (FixintMask <= int && int < NilByte) os.write(int.toInt)
+    if (FixintMask <= int && int < NilByte) writeByte(d, int.toInt)
     else if (Byte.MinValue <= int && int <= Byte.MaxValue) {
-      os.write(Int8Byte)
-      os.write(int.toInt)
+      writeByte(d, Int8Byte)
+      writeByte(d, int.toInt)
     }
     else if (Byte.MaxValue < int && int <= MaxUint8) {
-      os.write(Uint8Byte)
-      os.write(int.toInt)
+      writeByte(d, Uint8Byte)
+      writeByte(d, int.toInt)
     }
     else if (Short.MinValue <= int && int <= Short.MaxValue) {
-      os.write(Int16Byte)
-      os.write(ByteBuffer.allocate(2).putShort(int.toShort).array)
+      writeByte(d, Int16Byte)
+      write(d, ByteBuffer.allocate(2).putShort(int.toShort).array)
     }
     else if (Short.MaxValue < int && int <= MaxUint16) {
-      os.write(Uint16Byte)
-      os.write(ByteBuffer.allocate(2).putShort(int.toShort).array)
+      writeByte(d, Uint16Byte)
+      write(d, ByteBuffer.allocate(2).putShort(int.toShort).array)
     }
     else if (Int.MinValue <= int && int <= Int.MaxValue) {
-      os.write(Int32Byte)
-      os.write(ByteBuffer.allocate(4).putInt(int.toInt).array)
+      writeByte(d, Int32Byte)
+      write(d, ByteBuffer.allocate(4).putInt(int.toInt).array)
     }
     else if (Int.MaxValue < int && int <= MaxUint32) {
-      os.write(Uint32Byte)
-      os.write(ByteBuffer.allocate(4).putInt(int.toInt).array)
+      writeByte(d, Uint32Byte)
+      write(d, ByteBuffer.allocate(4).putInt(int.toInt).array)
     }
     else {
-      os.write(Int64Byte)
-      os.write(ByteBuffer.allocate(8).putLong(int).array)
+      writeByte(d, Int64Byte)
+      write(d, ByteBuffer.allocate(8).putLong(int).array)
     }
   }
 
@@ -241,16 +241,16 @@ SRoot: no parent
   }
 
   private def writeByteArray(byteSizes: Array[Byte], data: Array[Byte]) = {
-    if (data.length < 0x20) os.write(byteSizes(0) | data.length)
+    if (data.length < 0x20) writeByte(d, byteSizes(0) | data.length)
     else {
-      if (data.length < 0x100) os.write(byteSizes(1))
-      else if (data.length < 0x10000) os.write(byteSizes(2))
-      else os.write(byteSizes(3))
+      if (data.length < 0x100) writeByte(d, byteSizes(1))
+      else if (data.length < 0x10000) writeByte(d, byteSizes(2))
+      else writeByte(d, byteSizes(3))
 
-      os.write(data.length)
+      writeByte(d, data.length)
     }
 
-    os.write(data)
+    write(d, data)
   }
 
   private def writeName(namespaceName: Option[String] = None, localName: String) = {
@@ -267,7 +267,7 @@ SRoot: no parent
     className match {
       case None => ()
       case Some((namespaceName, localName)) => {
-        os.write(ClassNameByte)
+        writeByte(d, ClassNameByte)
         writeName(namespaceName, localName)
       }
     }
@@ -277,7 +277,7 @@ SRoot: no parent
     val parent = _state match {
       case SAfterEntry(s @ SObject(_)) => {
         // write no value, pop state
-        os.write(NoKeyValueByte)
+        writeByte(d, NoKeyValueByte)
         s
       }
       case s @ SObject(_) => s
@@ -290,20 +290,20 @@ SRoot: no parent
 
   def writeSequenceStart(className: Option[(Option[String], String)]) = {
     validateValueState
-    os.write(SequenceByte)
+    writeByte(d, SequenceByte)
     writeClassName(className)
     _state = SList(_state.asInstanceOf[SParent])
   }
 
   def writeAssortmentStart = {
     validateValueState
-    os.write(AssortmentByte)
+    writeByte(d, AssortmentByte)
     _state = SAssortment(_state.asInstanceOf[SParent])
   }
 
   def writeObjectStart(className: Option[(Option[String], String)]) = {
     validateValueState
-    os.write(ObjectByte)
+    writeByte(d, ObjectByte)
     writeClassName(className)
     _state = SObject(_state.asInstanceOf[SParent])
   }

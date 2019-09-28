@@ -3,10 +3,9 @@ package scala.data.pack.obj
 import scala.data.pack.stream._
 import scala.data.Assortment
 import scala.data.Assortment._
-import java.io.OutputStream
 
 object Writer {
-  private def packChildren(children: List[Token], writer: Writer): Unit =
+  private def packChildren[D](children: List[Token], writer: Writer[D]): Unit =
     children match {
       case token :: tail => {
         _pack(token, writer)
@@ -15,7 +14,7 @@ object Writer {
       case Nil => ()
     }
 
-  private def packElements(elements: List[Element[Token, Token]], writer: Writer): Unit = {
+  private def packElements[D](elements: List[Element[Token, Token]], writer: Writer[D]): Unit = {
     import writer._
 
     elements match {
@@ -40,7 +39,7 @@ object Writer {
     case Nil => ()
   }}
 
-  private def packProperties(elements: List[Element[QualifiedName, Token]], writer: Writer): Unit = {
+  private def packProperties[D](elements: List[Element[QualifiedName, Token]], writer: Writer[D]): Unit = {
     import writer._
 
     elements match {
@@ -71,7 +70,7 @@ object Writer {
     case Nil => ()
   }}
 
-  private def _pack(token: Token, writer: Writer): Unit = {
+  private def _pack[D](token: Token, writer: Writer[D]): Unit = {
     import writer._
 
     token match {
@@ -109,5 +108,5 @@ object Writer {
     }
   }
 
-  def pack(token: Token, os: OutputStream) = _pack(token, new Writer(os))
+  def pack[D](token: Token, d: D)(implicit w: Write[D]) = _pack(token, new Writer(d))
 }

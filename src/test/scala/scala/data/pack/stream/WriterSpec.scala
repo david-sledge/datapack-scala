@@ -1,17 +1,20 @@
 package scala.data.pack.stream
 
+  import io._
+  import Writer._
+
 import org.scalatest._
 import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.math.BigInteger
 
-import Writer._
 import scala.data.pack.IntMagnitudeTooLargeException
 import scala.data.pack.FormatBytes._
 
 class WriterSpec extends FlatSpec with Matchers {
   "A data pack writer" should "write a Nil" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](NilByte)
     noException should be thrownBy writer.writeNil
     buffer.toByteArray.toList shouldBe expected
@@ -19,7 +22,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "throw an exception when an attempt is made to write a construct in an unsuitable state" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte]()
     an [WriteStateException] should be thrownBy writer.writeCollectionEnd
     buffer.toByteArray.toList shouldBe expected
@@ -27,7 +30,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a Boolean false" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](FalseByte)
     noException should be thrownBy writer.writeFalse
     buffer.toByteArray.toList shouldBe expected
@@ -35,7 +38,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a Boolean true" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](TrueByte)
     noException should be thrownBy writer.writeTrue
     buffer.toByteArray.toList shouldBe expected
@@ -43,7 +46,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a masked non-negative integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](0x0f.toByte)
     noException should be thrownBy writer.writeInt(15)
     buffer.toByteArray.toList shouldBe expected
@@ -51,7 +54,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a masked non-negative integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](0x0f.toByte)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(15))
     buffer.toByteArray.toList shouldBe expected
@@ -59,7 +62,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a masked negative integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](0xff.toByte)
     noException should be thrownBy writer.writeInt(-1)
     buffer.toByteArray.toList shouldBe expected
@@ -67,7 +70,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a masked negative integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](0xff.toByte)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(-1))
     buffer.toByteArray.toList shouldBe expected
@@ -75,7 +78,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a one-byte signed integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int8Byte, 0x81.toByte)
     noException should be thrownBy writer.writeInt(-127)
     buffer.toByteArray.toList shouldBe expected
@@ -83,7 +86,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a one-byte signed integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int8Byte, 0x81.toByte)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(-127))
     buffer.toByteArray.toList shouldBe expected
@@ -91,7 +94,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a one-byte unsigned integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Uint8Byte, 0x81.toByte)
     noException should be thrownBy writer.writeInt(129)
     buffer.toByteArray.toList shouldBe expected
@@ -99,7 +102,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a one-byte unsigned integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Uint8Byte, 0x81.toByte)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(129))
     buffer.toByteArray.toList shouldBe expected
@@ -107,7 +110,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a two-byte signed integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int16Byte, 0x80.toByte, 0)
     noException should be thrownBy writer.writeInt(-32768)
     buffer.toByteArray.toList shouldBe expected
@@ -115,7 +118,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a two-byte signed integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int16Byte, 0x80.toByte, 0)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(-32768))
     buffer.toByteArray.toList shouldBe expected
@@ -123,7 +126,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a two-byte unsigned integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Uint16Byte, 0x80.toByte, 0)
     noException should be thrownBy writer.writeInt(32768)
     buffer.toByteArray.toList shouldBe expected
@@ -131,7 +134,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a two-byte unsigned integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Uint16Byte, 0x80.toByte, 0)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(32768))
     buffer.toByteArray.toList shouldBe expected
@@ -139,7 +142,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a four-byte signed integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int32Byte, 0x80.toByte, 0, 0, 0)
     noException should be thrownBy writer.writeInt(-2147483648)
     buffer.toByteArray.toList shouldBe expected
@@ -147,7 +150,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a four-byte signed integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int32Byte, 0x80.toByte, 0, 0, 0)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(-2147483648))
     buffer.toByteArray.toList shouldBe expected
@@ -155,7 +158,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a four-byte unsigned integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Uint32Byte, 0x80.toByte, 0, 0, 0)
     noException should be thrownBy writer.writeInt(2147483648L)
     buffer.toByteArray.toList shouldBe expected
@@ -163,7 +166,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a four-byte unsigned integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Uint32Byte, 0x80.toByte, 0, 0, 0)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(2147483648L))
     buffer.toByteArray.toList shouldBe expected
@@ -171,7 +174,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write an eight-byte signed integer" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int64Byte, 0x80.toByte, 0, 0, 0, 0, 0, 0, 0)
     noException should be thrownBy writer.writeInt(Long.MinValue)
     buffer.toByteArray.toList shouldBe expected
@@ -179,7 +182,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write an eight-byte signed integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Int64Byte, 0x80.toByte, 0, 0, 0, 0, 0, 0, 0)
     noException should be thrownBy writer.writeBigInt(BigInteger.valueOf(Long.MinValue))
     buffer.toByteArray.toList shouldBe expected
@@ -187,7 +190,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write an eight-byte unsigned integer (from a BigInteger instance)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Uint64Byte, 0x80.toByte, 0, 0, 0, 0, 0, 0, 0)
     noException should be thrownBy writer.writeBigInt(new java.math.BigInteger(1,
       Array[Byte](
@@ -199,7 +202,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "throw an exception when trying to write an unsigned integer that requires more than eight bytes" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte]()
     an [IntMagnitudeTooLargeException] should be thrownBy writer.writeBigInt(new java.math.BigInteger(1,
       Array[Byte](
@@ -211,7 +214,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "throw an exception when trying to write a negative integer that requires more than eight bytes" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte]()
     an [IntMagnitudeTooLargeException] should be thrownBy writer.writeBigInt(new java.math.BigInteger(-1,
       Array[Byte](
@@ -223,7 +226,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write a four-byte floating point decimal" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Float32Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)
     noException should be thrownBy writer.writeFloat(-2f)
     buffer.toByteArray.toList shouldBe expected
@@ -231,7 +234,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write an eight-byte floating point decimal" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List[Byte](Float64Byte, 0xc0.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte, 0x00.toByte)
     noException should be thrownBy writer.writeDouble(-2)
     buffer.toByteArray.toList shouldBe expected
@@ -239,7 +242,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write brief binary data" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val out = List.fill(5)(0x21.toByte)
     val expected = (FixbinMask | out.length) :: out
     noException should be thrownBy writer.writeBin(out.toArray)
@@ -248,7 +251,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "write (seemingly) not-so-brief binary data" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val out = List.fill(64)(0x21.toByte)
     val expected = Bin8Byte :: out.length.toByte :: out
     noException should be thrownBy writer.writeBin(out.toArray)
@@ -257,7 +260,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "not allow property names outside objects" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val out = List.fill(5)(0x21.toByte)
     val expected = Nil
     an [WriteStateException] should be thrownBy writer.writePropertyName(None, "!!!!!")
@@ -266,7 +269,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an empty unclassed sequence" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(SequenceByte, CollectionEndByte)
     noException should be thrownBy {
         writer.writeSequenceStart(None)
@@ -277,7 +280,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an empty classed (local name) sequence" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         SequenceByte,
         ClassNameByte,
@@ -294,7 +297,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an empty classed (fully-qualified name) sequence" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         SequenceByte,
         ClassNameByte,
@@ -313,7 +316,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an empty assortment" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(AssortmentByte, CollectionEndByte)
     noException should be thrownBy {
         writer.writeAssortmentStart
@@ -325,7 +328,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an empty unclassed object (collection of qualified name/value pairs)" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(ObjectByte, CollectionEndByte)
     noException should be thrownBy {
         writer.writeObjectStart(None)
@@ -337,7 +340,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an empty classed (local name) object" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         ObjectByte,
         ClassNameByte,
@@ -354,7 +357,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an empty classed (fully-qualified name) object" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         ObjectByte,
         ClassNameByte,
@@ -373,7 +376,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow a non-empty assortment" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         AssortmentByte,
         // key
@@ -397,7 +400,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow a non-empty unclassed sequence" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         SequenceByte,
         0x0f.toByte,
@@ -429,7 +432,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow a non-empty classed (local name) sequence" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         SequenceByte,
         ClassNameByte,
@@ -464,7 +467,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow a non-empty classed (fully-qualified name) sequence" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         SequenceByte,
         ClassNameByte,
@@ -501,7 +504,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow an non-empty unclassed object" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         ObjectByte,
         (FixstrMask | 0x05).toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte, 0x21.toByte,
@@ -543,7 +546,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow a non-empty classed (local name) object" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         ObjectByte,
         ClassNameByte,
@@ -588,7 +591,7 @@ class WriterSpec extends FlatSpec with Matchers {
 
   it should "allow a non-empty classed (fully-qualified name) object" in {
     val buffer = new ByteArrayOutputStream
-    val writer = new Writer(buffer)
+    val writer = new Writer(buffer.asInstanceOf[OutputStream])
     val expected = List(
         ObjectByte,
         ClassNameByte,

@@ -11,7 +11,7 @@ final class Assortment[K, V] private[data](
   lazy val insertOrder = _insertOrder.reverse
 
   lazy val (set, map, seq) =
-    ((Set[K](), Map[K, V](), Seq[V]()) /: _insertOrder)((acc, elem) => {
+    (_insertOrder.foldLeft(Set[K](), Map[K, V](), Seq[V]()))((acc, elem) => {
       acc match {
         case (set, map, seq) =>
           elem match {

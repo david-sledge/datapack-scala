@@ -1,13 +1,13 @@
 package scala.data.pack.stream
 
   import Reader._
+  import Read._
 import scala.data.pack.FormatBytes._
 import java.io.EOFException
-import java.io.InputStream
 import java.nio.ByteBuffer
 import java.math.BigInteger
 
-final class Reader(is: InputStream, handlePackType: PackType => Any) {
+final class Reader[S](s: S, handlePackType: PackType => Unit)(implicit r: Read[S]) {
 
   private var _state: State = SRoot
 
@@ -40,6 +40,7 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
     case _ => throw new Exception("Programmatic error.  Flog the developer!")
   }
 
+  // validation + transition = validition
   private val noKeyValueValueValitioner =
     (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
@@ -326,7 +327,7 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
   val buffer = new Array[Byte](8)
 
   private def readBytes(buffer: Array[Byte], start: Int, length: Int): Int = {
-    val bytesRead = is.read(buffer, start, length)
+    val bytesRead = read(s, buffer, start, length)
 
     if (bytesRead == -1) 0
     else if (bytesRead < length)
@@ -345,7 +346,7 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
   }
 
   private def read1ByteUInt = {
-    val int = is.read
+    val int = readByte(s)
 
     if (int == -1)
       throw new EOFException
@@ -368,9 +369,165 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
       buffer(3) & 0x00FF
   }
 
+  private val formatMap = Map[Byte, () => Unit](
+      NilByte           -> (() =>
+        nonStringValueValitioner(NilByte)(() => handlePackType(TNil))),
+      CollectionEndByte -> (() =>
+        collectionEndValitioner(CollectionEndByte)(() => handlePackType(TCollectionEnd))),
+      FalseByte         -> (() =>
+        nonStringValueValitioner(FalseByte)(() => handlePackType(TFalse))),
+      TrueByte          -> (() =>
+        nonStringValueValitioner(TrueByte)(() => handlePackType(TTrue))),
+      Int8Byte          -> (() =>
+        nonStringValueValitioner(Int8Byte)(() => handlePackType(toTInt(read1ByteUInt.toByte)))),
+      Int16Byte         -> (() =>
+        nonStringValueValitioner(Int16Byte)(() => {
+          readBytes_(2)
+          handlePackType(toTInt(ByteBuffer.wrap(buffer).getShort))
+        })),
+      Int32Byte         -> (() =>
+        nonStringValueValitioner(Int32Byte)(() => {
+          readBytes_(4)
+          handlePackType(toTInt(ByteBuffer.wrap(buffer).getInt))
+        })),
+      Int64Byte         -> (() =>
+        nonStringValueValitioner(Int64Byte)(() => {
+          readBytes_(8)
+          handlePackType(toTInt(ByteBuffer.wrap(buffer).getLong))
+        })),
+      Uint8Byte         -> (() => nonStringValueValitioner(Uint8Byte)(
+        () => handlePackType(toTInt(read1ByteUInt)))),
+      Uint16Byte        -> (() =>
+        nonStringValueValitioner(Uint16Byte)(() => {
+          readBytes_(2)
+          handlePackType(toTInt(ByteBuffer.wrap(buffer).getShort & 0x0000ffff))
+        })),
+      Uint32Byte        -> (() =>
+        nonStringValueValitioner(Uint32Byte)(() => {
+          readBytes_(4)
+          handlePackType(toTInt(ByteBuffer.wrap(buffer).getInt & 0x00000000ffffffffL))
+        })),
+      Uint64Byte        -> (() =>
+        nonStringValueValitioner(Uint64Byte)(() => {
+          readBytes_(8)
+          handlePackType(
+          		TInt(BigInteger.valueOf(ByteBuffer.wrap(buffer).getLong + Long.MaxValue + 1L).setBit(63)))
+        })),
+      Float32Byte       -> (() =>
+        nonStringValueValitioner(Float32Byte)(() => {
+          readBytes_(4)
+          handlePackType(TFloat(ByteBuffer.wrap(buffer).getFloat))
+        })),
+      Float64Byte       -> (() =>
+        nonStringValueValitioner(Float64Byte)(() => {
+          readBytes_(8)
+          handlePackType(TDouble(ByteBuffer.wrap(buffer).getDouble))
+        })),
+      Bin8Byte          -> (() =>
+        binValitioner(Bin8Byte)(() => {
+          val length = read1ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TBin(buffer.toList))
+        })),
+      Bin16Byte         -> (() =>
+        binValitioner(Bin16Byte)(() => {
+          val length = read2ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TBin(buffer.toList))
+        })),
+      Bin32Byte         -> (() =>
+        binValitioner(Bin32Byte)(() => {
+          val length = read4ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TBin(buffer.toList))
+        })),
+      Str8Byte          -> (() =>
+        strValitioner(Str8Byte)(() => {
+          val length = read1ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TStr(new String(buffer, "utf-8")))
+        })),
+      Str16Byte         -> (() =>
+        strValitioner(Str16Byte)(() => {
+          val length = read2ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TStr(new String(buffer, "utf-8")))
+        })),
+      Str32Byte         -> (() =>
+        strValitioner(Str32Byte)(() => {
+          val length = read4ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TStr(new String(buffer, "utf-8")))
+        })),
+      Ns8Byte           -> (() =>
+        nsValitioner(Ns8Byte)(() => {
+          val length = read1ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TNs(new String(buffer, "utf-8")))
+        })),
+      Ns16Byte          -> (() =>
+        nsValitioner(Ns16Byte)(() => {
+          val length = read2ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TNs(new String(buffer, "utf-8")))
+        })),
+      Ns32Byte          -> (() =>
+        nsValitioner(Ns32Byte)(() => {
+          val length = read4ByteUInt
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TNs(new String(buffer, "utf-8")))
+        })),
+      ClassNameByte     -> (() => classNameValitioner(ClassNameByte)(
+        () => handlePackType(TClassName))),
+      SequenceByte      -> (() =>
+        objectSequenceValitioner((state: State) => SSequence(state.asInstanceOf[SValue]))(SequenceByte)(
+            () => handlePackType(TSequence))),
+      AssortmentByte    -> (() =>
+        assortmentValitioner(AssortmentByte)(() => handlePackType(TAssortment))),
+      ObjectByte        -> (() =>
+        objectSequenceValitioner((state: State) => SObject(state.asInstanceOf[SValue]))(ObjectByte)(
+            () => handlePackType(TObject))),
+      NoKeyValueByte    -> (() => noKeyValueValueValitioner(NoKeyValueByte)(
+            () => handlePackType(TNoKeyValue))),
+      /*
+      // */
+    )
+
+  private val fixMap = Map[Byte, (Byte, Byte) => Unit](
+      /*
+       // */
+     FixbinMask -> ((byte, length) =>
+        binValitioner(byte)(() => {
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TBin(buffer.toList))
+        })),
+      FixstrMask -> ((byte, length) =>
+        strValitioner(byte)(() => {
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TStr(new String(buffer, "utf-8")))
+        })),
+      FixnsMask  -> ((byte, length) =>
+        nsValitioner(byte)(() => {
+          val buffer = new Array[Byte](length)
+          readBytes_(length, buffer)
+          handlePackType(TNs(new String(buffer, "utf-8")))
+        })),
+    )
+
   def readValue = {
     // read byte
-    val iByte = is.read
+    val iByte = readByte(s)
 
     if (iByte == -1) {
       _state match {
@@ -383,259 +540,34 @@ final class Reader(is: InputStream, handlePackType: PackType => Any) {
 
       val byte = iByte.toByte
 
-      // identify format and verify that the byte is valid in the current state
-      idFormat(byte) match {
-        case Fixint(int) =>
-          nonStringValueValitioner(byte)(() => handlePackType(toTInt(int)))
-        case FNil =>
-          nonStringValueValitioner(byte)(() => handlePackType(TNil))
-        case FColEnd =>
-          collectionEndValitioner(byte)(() => handlePackType(TCollectionEnd))
-        case FFalse =>
-          nonStringValueValitioner(byte)(() => handlePackType(TFalse))
-        case FTrue =>
-          nonStringValueValitioner(byte)(() => handlePackType(TTrue))
-        case FInt8 => nonStringValueValitioner(byte)(
-            () => handlePackType(toTInt(read1ByteUInt.toByte)))
-        case FInt16 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(2)
-            handlePackType(toTInt(ByteBuffer.wrap(buffer).getShort))
-          })
-        case FInt32 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(4)
-            handlePackType(toTInt(ByteBuffer.wrap(buffer).getInt))
-          })
-        case FInt64 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(8)
-            handlePackType(toTInt(ByteBuffer.wrap(buffer).getLong))
-          })
-          //*
-        case FUint8 => nonStringValueValitioner(byte)(
-            () => handlePackType(toTInt(read1ByteUInt)))
-        case FUint16 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(2)
-            handlePackType(toTInt(ByteBuffer.wrap(buffer).getShort & 0x0000ffff))
-          })
-        case FUint32 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(4)
-            handlePackType(toTInt(ByteBuffer.wrap(buffer).getInt & 0x00000000ffffffffL))
-          })
-        case FUint64 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(8)
-            handlePackType(
-            		TInt(BigInteger.valueOf(ByteBuffer.wrap(buffer).getLong + Long.MaxValue + 1L).setBit(63)))
-          })
-           // */
-        case FFloat32 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(4)
-            handlePackType(TFloat(ByteBuffer.wrap(buffer).getFloat))
-          })
-        case FFloat64 =>
-          nonStringValueValitioner(byte)(() => {
-            readBytes_(8)
-            handlePackType(TDouble(ByteBuffer.wrap(buffer).getDouble))
-          })
-        case FBin8 =>
-          binValitioner(byte)(() => {
-            val length = read1ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TBin(buffer.toList))
-          })
-        case FBin16 =>
-          binValitioner(byte)(() => {
-            val length = read2ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TBin(buffer.toList))
-          })
-        case FBin32 =>
-          binValitioner(byte)(() => {
-            val length = read4ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TBin(buffer.toList))
-          })
-//*
-        case FStr8 =>
-          strValitioner(byte)(() => {
-            val length = read1ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TStr(new String(buffer, "utf-8")))
-          })
-        case FStr16 =>
-          strValitioner(byte)(() => {
-            val length = read2ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TStr(new String(buffer, "utf-8")))
-          })
-        case FStr32 =>
-          strValitioner(byte)(() => {
-            val length = read4ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TStr(new String(buffer, "utf-8")))
-          })
-// */        case FNs8 =>
-          nsValitioner(byte)(() => {
-            val length = read1ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TNs(new String(buffer, "utf-8")))
-          })
-        case FNs16 =>
-          nsValitioner(byte)(() => {
-            val length = read2ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TNs(new String(buffer, "utf-8")))
-          })
-        case FNs32 =>
-          nsValitioner(byte)(() => {
-            val length = read4ByteUInt
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TNs(new String(buffer, "utf-8")))
-          })
-        case FClassname => classNameValitioner(byte)(
-            () => handlePackType(TClassName))
-        case FSequence => objectSequenceValitioner((state: State) => SSequence(state.asInstanceOf[SValue]))(byte)(
-            () => handlePackType(TSequence))
-        case FAssortment => assortmentValitioner(byte)(() => handlePackType(TAssortment))
-        case FObject => objectSequenceValitioner((state: State) => SObject(state.asInstanceOf[SValue]))(byte)(
-            () => handlePackType(TObject))
-        case FNoKeyValue => noKeyValueValueValitioner(byte)(
-            () => handlePackType(TNoKeyValue))
-        case FFixbin(length) =>
-          binValitioner(byte)(() => {
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TBin(buffer.toList))
-          })
-        case FFixstr(length) =>
-          strValitioner(byte)(() => {
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TStr(new String(buffer, "utf-8")))
-          })
-        case FFixns(length) =>
-          nsValitioner(byte)(() => {
-            val buffer = new Array[Byte](length)
-            readBytes_(length, buffer)
-            handlePackType(TNs(new String(buffer, "utf-8")))
-          })
-        case FUnused => throw new UnusedFormatByteException(byte)
-        case _ =>
-          throw new Exception("Programmatic error.  Flog the developer!")
+      if (formatMap contains byte)
+        formatMap(byte)()
+      else {
+        val value = byte & FixintMask
+  
+        if (value == 0 || value == FixintMask)
+          nonStringValueValitioner(byte)(() => handlePackType(toTInt(byte)))
+        else {
+          val mask = (byte & FixMask).toByte
+  
+          if (fixMap contains mask)
+            fixMap(mask)(byte, (byte & LenMask).toByte)
+          else
+            throw new UnusedFormatByteException(byte)
+        }
       }
 
       true
     }
   }
+
 }
 
 object Reader {
-  private[pack] abstract class Format
-
-  private[pack] final case class Fixint(int: Int) extends Format
-  private[pack] case object FNil extends Format
-  private[pack] case object FColEnd extends Format
-  private[pack] case object FFalse extends Format
-  private[pack] case object FTrue extends Format
-  private[pack] case object FInt8 extends Format
-  private[pack] case object FInt16 extends Format
-  private[pack] case object FInt32 extends Format
-  private[pack] case object FInt64 extends Format
-  private[pack] case object FUint8 extends Format
-  private[pack] case object FUint16 extends Format
-  private[pack] case object FUint32 extends Format
-  private[pack] case object FUint64 extends Format
-  private[pack] case object FFloat32 extends Format
-  private[pack] case object FFloat64 extends Format
-  private[pack] case object FBin8 extends Format
-  private[pack] case object FBin16 extends Format
-  private[pack] case object FBin32 extends Format
-  private[pack] case object FStr8 extends Format
-  private[pack] case object FStr16 extends Format
-  private[pack] case object FStr32 extends Format
-  private[pack] case object FNs8 extends Format
-  private[pack] case object FNs16 extends Format
-  private[pack] case object FNs32 extends Format
-  private[pack] case object FClassname extends Format
-  private[pack] case object FSequence extends Format
-  private[pack] case object FAssortment extends Format
-  private[pack] case object FObject extends Format
-  private[pack] case object FNoKeyValue extends Format
-  private[pack] final case class FFixbin(length: Int) extends Format
-  private[pack] final case class FFixstr(length: Int) extends Format
-  private[pack] final case class FFixns(length: Int) extends Format
-  private[pack] case object FUnused extends Format
-
-  private val formatMap = Map[Byte, Format](
-      NilByte           -> FNil,
-      CollectionEndByte -> FColEnd,
-      FalseByte         -> FFalse,
-      TrueByte          -> FTrue,
-      Int8Byte          -> FInt8,
-      Int16Byte         -> FInt16,
-      Int32Byte         -> FInt32,
-      Int64Byte         -> FInt64,
-      Uint8Byte         -> FUint8,
-      Uint16Byte        -> FUint16,
-      Uint32Byte        -> FUint32,
-      Uint64Byte        -> FUint64,
-      Float32Byte       -> FFloat32,
-      Float64Byte       -> FFloat64,
-      Bin8Byte          -> FBin8,
-      Bin16Byte         -> FBin16,
-      Bin32Byte         -> FBin32,
-      Str8Byte          -> FStr8,
-      Str16Byte         -> FStr16,
-      Str32Byte         -> FStr32,
-      Ns8Byte           -> FNs8,
-      Ns16Byte          -> FNs16,
-      Ns32Byte          -> FNs32,
-      ClassNameByte     -> FClassname,
-      SequenceByte      -> FSequence,
-      AssortmentByte    -> FAssortment,
-      ObjectByte        -> FObject,
-      NoKeyValueByte    -> FNoKeyValue
-    )
-
-  private val fixMap = Map[Byte, Byte => Format](
-      FixbinMask -> (new FFixbin(_)),
-      FixstrMask -> (new FFixstr(_)),
-      FixnsMask  -> (new FFixns(_))
-    )
-
-  private[pack] def idFormat(byte: Byte) = {
-
-    if (formatMap contains byte) formatMap(byte)
-    else {
-      val value = byte & FixintMask
-
-      if (value == 0 || value == FixintMask) new Fixint(byte)
-      else {
-        val mask = (byte & FixMask).toByte
-
-        if (fixMap contains mask) fixMap(mask)((byte & LenMask).toByte)
-        else FUnused
-      }
-    }
-  }
 
   sealed trait State
   sealed trait SParent extends State
-  abstract class SChild(parent: SParent) extends State
+  sealed abstract class SChild(parent: SParent) extends State
   sealed trait SValue extends SParent
   sealed trait SClassable extends SParent
   sealed trait SMappable extends SParent
