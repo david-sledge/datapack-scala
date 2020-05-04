@@ -4,8 +4,10 @@ import org.scalatest._
 import scala.util._
 import scala.collection.concurrent.TrieMap
 import java.nio.ByteBuffer
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class Spec extends FlatSpec with Matchers {
+class Spec extends AnyFlatSpec with Matchers {
   "Tests" should "have a sandbox area to play around with code" in {
     val byte = 0xff.toByte
     val int = byte

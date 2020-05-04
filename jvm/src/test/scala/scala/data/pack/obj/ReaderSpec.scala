@@ -4,6 +4,8 @@ package scala.data.pack.obj
 
 import scala.data.pack.stream.io._
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import scala.data.Assortment
 import java.io.InputStream
 import java.io.ByteArrayInputStream
@@ -11,7 +13,7 @@ import java.io.ByteArrayInputStream
 import scala.data.pack.FormatBytes._
 import java.math.BigInteger
 
-class ReaderSpec extends FlatSpec with Matchers {
+class ReaderSpec extends AnyFlatSpec with Matchers {
   "The object reader" should "produce None with an empty input stream" in {
     val input = Array[Byte]()
     val expected = None

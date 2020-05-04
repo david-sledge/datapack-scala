@@ -259,7 +259,6 @@ final class Reader[S](s: S, handlePackType: PackType => Unit)(implicit r: Read[S
         )
     }
 
-//*
   private val strValitioner = (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
           init = () => handler(),
@@ -297,7 +296,7 @@ final class Reader[S](s: S, handlePackType: PackType => Unit)(implicit r: Read[S
           }
         )
     }
- // */
+
   private val binValitioner = (packType: Byte) => (handler: () => Unit) => {
       validateAndTransitionState(
           init = () => handler(),
@@ -498,13 +497,9 @@ final class Reader[S](s: S, handlePackType: PackType => Unit)(implicit r: Read[S
             () => handlePackType(TObject))),
       NoKeyValueByte    -> (() => noKeyValueValueValitioner(NoKeyValueByte)(
             () => handlePackType(TNoKeyValue))),
-      /*
-      // */
     )
 
   private val fixMap = Map[Byte, (Byte, Byte) => Unit](
-      /*
-       // */
      FixbinMask -> ((byte, length) =>
         binValitioner(byte)(() => {
           val buffer = new Array[Byte](length)

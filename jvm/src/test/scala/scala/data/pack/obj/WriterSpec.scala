@@ -4,6 +4,8 @@ package scala.data.pack.obj
 
 import scala.data.pack.stream.io._
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import scala.data.Assortment
 import scala.data.Assortment._
 import java.io.ByteArrayOutputStream
@@ -11,7 +13,7 @@ import java.io.OutputStream
 
 import scala.data.pack.FormatBytes._
 
-class WriterSpec extends FlatSpec with Matchers {
+class WriterSpec extends AnyFlatSpec with Matchers {
   "The object writer" should "write a Nil" in {
     val data = DNil
     val expected = Array[Byte](NilByte)
@@ -77,7 +79,7 @@ class WriterSpec extends FlatSpec with Matchers {
   }
 
   it should "write an eight-byte signed integer" in {
-    val data = toDInt(-1085102592571150096l)
+    val data = toDInt(-1085102592571150096L)
     val expected = Array[Byte](Int64Byte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte, 0xf0.toByte)
     val output = new ByteArrayOutputStream
     pack(data, output.asInstanceOf[OutputStream])

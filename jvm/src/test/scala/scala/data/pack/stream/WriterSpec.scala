@@ -4,6 +4,8 @@ package scala.data.pack.stream
   import Writer._
 
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.math.BigInteger
@@ -11,7 +13,7 @@ import java.math.BigInteger
 import scala.data.pack.IntMagnitudeTooLargeException
 import scala.data.pack.FormatBytes._
 
-class WriterSpec extends FlatSpec with Matchers {
+class WriterSpec extends AnyFlatSpec with Matchers {
   "A data pack writer" should "write a Nil" in {
     val buffer = new ByteArrayOutputStream
     val writer = new Writer(buffer.asInstanceOf[OutputStream])

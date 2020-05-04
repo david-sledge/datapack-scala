@@ -4,13 +4,15 @@ package scala.data.pack.stream
   import Reader._
 
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.EOFException
 
 import scala.data.pack.FormatBytes._
 
-class ReaderSpec extends FlatSpec with Matchers {
+class ReaderSpec extends AnyFlatSpec with Matchers {
 
   "A data pack reader" should "read" in {
     val reader = new Reader(new ByteArrayInputStream(Array[Byte]()).asInstanceOf[InputStream], _ => ())
@@ -83,7 +85,7 @@ class ReaderSpec extends FlatSpec with Matchers {
 
   it should "read an eight-byte signed integer" in {
     val reader = new Reader(new ByteArrayInputStream(Array[Byte](Int64Byte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte, 0xff.toByte)).asInstanceOf[InputStream],
-        (_ shouldBe toTInt(0xffffffffffffffffl)))
+        (_ shouldBe toTInt(0xffffffffffffffffL)))
     reader.readValue
     reader.position shouldBe 9
   }

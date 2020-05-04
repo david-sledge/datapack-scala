@@ -1,8 +1,10 @@
 package scala.data
 
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AssortmentSpec extends FlatSpec with Matchers {
+class AssortmentSpec extends AnyFlatSpec with Matchers {
   "Assortment" should "retain insertion order with each element that's added" in {
     val col = Assortment[String, Int]()
 
